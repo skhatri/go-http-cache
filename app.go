@@ -1,56 +1,80 @@
 package main
 
 import (
-        "github.com/gin-gonic/gin"
-        "github.com/skhatri/go-logger/logging"
-        "github.com/skhatri/go-fns/lib/converters"
-        "net/http"
-        "os"
+	"fmt"
+	"github.com/skhatri/go-http-cache/pkg/conf"
+	"github.com/skhatri/go-http-cache/pkg/target"
+	"github.com/skhatri/go-http-cache/pkg/target/model"
+	"github.com/skhatri/go-logger/logging"
+	"io"
+	"net/http"
 )
 
-
-type Server struct {
-  Address string `yaml:"address,omitempty"`
-}
-
-type Cache struct {
-  Engine string `yaml:"engine,omitempty"`
-  Location string `yaml:"location,omitempty"` 
-}
-
-type Config struct {
-  Server Server `yaml:"server,omitempty"`
-  Target []string `yaml:"target,omitempty"`
-  Cache Cache `yaml:"location,omitempty"`  
-}
-
 func Configure() {
-        configFile := "config.yaml"
-        if cfg := os.Getenv("CONFIG_FILE"); cfg != "" {
-          configFile = cfg
-        }
-
-        cf := &Config{}
-      	err := converters.UnmarshalFile(configFile, cf)
-        if err != nil {
-          panic(err)
-        } 
-        gin.SetMode(gin.ReleaseMode)
-        r := gin.Default()
-
-        r.GET("/readiness", statusOk)
-        r.GET("/liveness", statusOk)
-
-        r.Run(cf.Server.Address)
+	var cf = conf.Configuration
+	logger.WithTask("http-go-cache").WithMessage("running server on %s", cf.Server.Address).Info()
+	err := http.ListenAndServe(cf.Server.Address, &handler{
+		cf,
+		target.NewResourceClient(cf.Cache),
+	})
+	if err != nil {
+		panic(err)
+	}
 }
+
+type handler struct {
+	cf       *conf.Config
+	instance model.ResourceClient
+}
+
+func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	var body []byte
+	if r.Method != "GET" {
+		rdr := r.Body
+		defer rdr.Close()
+		data, err := io.ReadAll(rdr)
+		body = data
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+	}
+
+	url := fmt.Sprintf("%s%s", h.cf.Target[0], r.RequestURI)
+	clientRequest := model.Request{
+		Method:  r.Method,
+		Headers: r.Header,
+		Body:    body,
+		Url:     url,
+	}
+	res, invErr := h.instance.Invoke(clientRequest)
+	if invErr != nil {
+		writeError(w, invErr)
+		return
+	}
+	defer res.Data.Close()
+
+	w.WriteHeader(res.StatusCode)
+	for k, values := range res.Headers {
+		for _, value := range values {
+			w.Header().Add(k, value)
+		}
+	}
+	_, cpError := io.Copy(w, res.Data)
+	if cpError != nil {
+		fmt.Println("error copying data", cpError)
+	}
+}
+
+func writeError(w http.ResponseWriter, err error) {
+	w.WriteHeader(500)
+	w.Header().Add("content-type", "text/plain")
+	w.Write([]byte(err.Error()))
+}
+
 var logger = logging.NewLogger("configure")
 
-func statusOk(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{
-                "status": "OK",
-        })
-}
-
 func main() {
-   Configure()
+	Configure()
 }
