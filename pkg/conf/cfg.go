@@ -3,6 +3,7 @@ package conf
 import (
 	"github.com/skhatri/go-fns/lib/converters"
 	"os"
+	"strings"
 )
 
 type Server struct {
@@ -17,7 +18,7 @@ type Cache struct {
 type Config struct {
 	Server Server   `yaml:"server,omitempty"`
 	Target []string `yaml:"target,omitempty"`
-	Cache  Cache    `yaml:"location,omitempty"`
+	Cache  Cache    `yaml:"cache,omitempty"`
 }
 
 var Configuration *Config
@@ -29,6 +30,14 @@ func init() {
 	}
 	Configuration = &Config{}
 	err := converters.UnmarshalFile(configFile, Configuration)
+
+	if targetOverride := os.Getenv("TARGET"); targetOverride != "" {
+		Configuration.Target = strings.Split(targetOverride, ",")
+	}
+	if addressOverride := os.Getenv("LISTEN_ADDRESS"); addressOverride != "" {
+		Configuration.Server.Address = addressOverride
+	}
+
 	if err != nil {
 		panic(err)
 	}

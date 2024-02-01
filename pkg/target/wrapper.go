@@ -3,7 +3,7 @@ package target
 import (
 	"fmt"
 	"github.com/skhatri/go-http-cache/pkg/conf"
-	"github.com/skhatri/go-http-cache/pkg/target/filesystem"
+	"github.com/skhatri/go-http-cache/pkg/target/cacheclient"
 	"github.com/skhatri/go-http-cache/pkg/target/httpcall"
 	"github.com/skhatri/go-http-cache/pkg/target/model"
 )
@@ -23,10 +23,10 @@ func (wr *wrapper) Invoke(req model.Request) (*model.Response, error) {
 }
 
 func NewResourceClient(cacheSettings conf.Cache) model.ResourceClient {
-	fsclient := filesystem.New(cacheSettings)
+	cacheClient := cacheclient.New(cacheSettings)
 	delegates := []model.ResourceClient{
-		fsclient,
-		httpcall.New(fsclient.(model.Notifier)),
+		cacheClient,
+		httpcall.New(cacheClient.(model.Notifier)),
 	}
 	return &wrapper{
 		clients: delegates,

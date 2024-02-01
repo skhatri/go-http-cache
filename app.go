@@ -10,6 +10,8 @@ import (
 	"net/http"
 )
 
+var logger = logging.NewLogger("configure")
+
 func Configure() {
 	var cf = conf.Configuration
 	logger.WithTask("http-go-cache").WithMessage("running server on %s", cf.Server.Address).Info()
@@ -55,25 +57,26 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer res.Data.Close()
 
-	w.WriteHeader(res.StatusCode)
 	for k, values := range res.Headers {
+		if k == "Date" {
+			continue
+		}
 		for _, value := range values {
 			w.Header().Add(k, value)
 		}
 	}
+	w.WriteHeader(res.StatusCode)
 	_, cpError := io.Copy(w, res.Data)
 	if cpError != nil {
-		fmt.Println("error copying data", cpError)
+		logger.WithTask("print-response").WithError(cpError)
 	}
 }
 
 func writeError(w http.ResponseWriter, err error) {
-	w.WriteHeader(500)
 	w.Header().Add("content-type", "text/plain")
+	w.WriteHeader(500)
 	w.Write([]byte(err.Error()))
 }
-
-var logger = logging.NewLogger("configure")
 
 func main() {
 	Configure()

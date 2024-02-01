@@ -2,10 +2,9 @@ server:
   address: ":8070"
 
 target:
-  - http://k8s-read.ops-catalog.io
-  - http://localhost:6100
+  - http://localhost:8080
 
 cache:
   engine: fs
-  location: "file:./tmp/cache"
+  location: "/tmp/cache"
 
