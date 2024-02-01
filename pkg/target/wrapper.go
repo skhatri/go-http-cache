@@ -6,6 +6,7 @@ import (
 	"github.com/skhatri/go-http-cache/pkg/target/cacheclient"
 	"github.com/skhatri/go-http-cache/pkg/target/httpcall"
 	"github.com/skhatri/go-http-cache/pkg/target/model"
+	"strings"
 )
 
 type wrapper struct {
@@ -13,13 +14,17 @@ type wrapper struct {
 }
 
 func (wr *wrapper) Invoke(req model.Request) (*model.Response, error) {
+	errs := make([]string, 0)
 	for _, c := range wr.clients {
-		res, _ := c.Invoke(req)
+		res, err := c.Invoke(req)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
 		if res != nil {
 			return res, nil
 		}
 	}
-	return nil, fmt.Errorf("no request handler")
+	return nil, fmt.Errorf("no request handler. delegate errors [%s]", strings.Join(errs, ", "))
 }
 
 func NewResourceClient(cacheSettings conf.Cache) model.ResourceClient {
