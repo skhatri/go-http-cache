@@ -4,7 +4,7 @@ go 1.21.5
 
 require (
 	github.com/skhatri/go-fns v0.1.6
-	github.com/skhatri/go-logger v0.2.0
+	github.com/skhatri/go-logger v0.3.0
 )
 
 require (

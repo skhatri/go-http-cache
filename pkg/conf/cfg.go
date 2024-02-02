@@ -64,7 +64,6 @@ func init() {
 		missFlag := strings.ToLower(logMiss) == "true"
 		Configuration.Cache.Options.LogMiss = &missFlag
 	}
-
 	if err != nil {
 		panic(err)
 	}

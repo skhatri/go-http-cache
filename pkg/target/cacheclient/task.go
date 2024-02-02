@@ -16,6 +16,7 @@ import (
 var logger = logging.NewLogger("fs")
 
 type CacheData struct {
+	Url        string              `json:"url"`
 	StatusCode int                 `json:"statusCode"`
 	Data       []byte              `json:"data"`
 	Headers    map[string][]string `json:"headers"`
@@ -58,6 +59,7 @@ func (fo *_CacheClient) OnNotify(req model.Request, res *model.Response) {
 		StatusCode: res.StatusCode,
 		Headers:    res.Headers,
 		Data:       data,
+		Url:        req.Url,
 	})
 }
 
