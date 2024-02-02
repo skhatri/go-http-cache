@@ -38,12 +38,12 @@ func (fo *_CacheClient) Invoke(req model.Request) (*model.Response, error) {
 	key := req.Key(fo.options.ShouldIgnoreHeaders())
 	if res, ok := fo.cache.Get(key); ok {
 		if fo.options.ShouldLogHit() {
-			logger.WithTask("http-fs-cache").WithAttribute("key", key).WithMessage("served from cache").Info()
+			logger.WithTask("http-fs-cache").WithAttribute("cache_id", key).WithMessage("served from cache").Info()
 		}
 		return res.ToResponse(), nil
 	} else {
 		if fo.options.ShouldLogMiss() {
-			logger.WithTask("http-fs-cache").WithAttribute("key", key).
+			logger.WithTask("http-fs-cache").WithAttribute("cache_id", key).
 				WithAttribute("target-url", req.Url).
 				WithMessage("cache miss").Warn()
 		}
