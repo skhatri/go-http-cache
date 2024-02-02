@@ -18,6 +18,7 @@ type Request struct {
 }
 
 func (req *Request) Key(ignoreHeaders bool) string {
+	hashObj := NewHashing().Write(req.Method).Write(req.Url)
 	headersSerial := bytes.Buffer{}
 	if !ignoreHeaders {
 		keys := make([]string, 0)
@@ -38,22 +39,32 @@ func (req *Request) Key(ignoreHeaders bool) string {
 			headersSerial.WriteString(strings.Join(values, ","))
 			headersSerial.WriteString(";")
 		}
+		hashObj.WriteBytes(headersSerial.Bytes())
 	}
-	return NewHashing().Write(req.Method).Write(req.Url).WriteBytes(req.Body).WriteBytes(headersSerial.Bytes()).Sum()
+	if req.Body != nil {
+		hashObj.WriteBytes(req.Body)
+	}
+	return hashObj.Sum()
 }
 
 func NewHashing() *Hashing {
 	return &Hashing{
-		_hash: md5.New(),
+		ignoreCase: true,
+		_hash:      md5.New(),
 	}
 }
 
 type Hashing struct {
-	_hash hash.Hash
+	ignoreCase bool
+	_hash      hash.Hash
 }
 
 func (hs *Hashing) Write(s string) *Hashing {
-	hs._hash.Write([]byte(s))
+	value := s
+	if hs.ignoreCase {
+		value = strings.ToLower(s)
+	}
+	hs._hash.Write([]byte(value))
 	return hs
 }
 
