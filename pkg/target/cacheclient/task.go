@@ -30,20 +30,31 @@ func (cd *CacheData) ToResponse() *model.Response {
 }
 
 type _CacheClient struct {
-	cache Cache
+	cache   Cache
+	options conf.CacheOptions
 }
 
 func (fo *_CacheClient) Invoke(req model.Request) (*model.Response, error) {
-	if res, ok := fo.cache.Get(req.Key()); ok {
-		logger.WithTask("http-fs-cache").WithAttribute("key", req.Key()).WithMessage("served from cache").Debug()
+	key := req.Key(fo.options.ShouldIgnoreHeaders())
+	if res, ok := fo.cache.Get(key); ok {
+		if fo.options.ShouldLogHit() {
+			logger.WithTask("http-fs-cache").WithAttribute("key", key).WithMessage("served from cache").Info()
+		}
 		return res.ToResponse(), nil
+	} else {
+		if fo.options.ShouldLogMiss() {
+			logger.WithTask("http-fs-cache").WithAttribute("key", key).
+				WithAttribute("target-url", req.Url).
+				WithMessage("cache miss").Warn()
+		}
 	}
+
 	return nil, fmt.Errorf("not available")
 }
 
 func (fo *_CacheClient) OnNotify(req model.Request, res *model.Response) {
 	data, _ := io.ReadAll(res.Data)
-	fo.cache.Store(req.Key(), CacheData{
+	fo.cache.Store(req.Key(fo.options.ShouldIgnoreHeaders()), CacheData{
 		StatusCode: res.StatusCode,
 		Headers:    res.Headers,
 		Data:       data,
@@ -138,6 +149,7 @@ func New(cacheSettings conf.Cache) model.ResourceClient {
 		}
 	}
 	return &_CacheClient{
-		cache: cacheEngine,
+		cache:   cacheEngine,
+		options: cacheSettings.Options,
 	}
 }

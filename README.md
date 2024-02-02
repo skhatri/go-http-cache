@@ -6,7 +6,8 @@ Overrides
 |---|---|
 |CONFIG_FILE|Config File to be used|
 |LISTEN_ADDRESS|Address this server will listen on|
-|TARGET|Proxy Target|
+|TARGET|Proxy Target to call when cache does not have data|
+|IGNORE_HEADERS|Whether to consider header keys and values when looking up cache|
 
 ### Running Locally
 ```

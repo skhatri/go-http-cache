@@ -11,8 +11,26 @@ type Server struct {
 }
 
 type Cache struct {
-	Engine   string `yaml:"engine,omitempty"`
-	Location string `yaml:"location,omitempty"`
+	Engine   string       `yaml:"engine,omitempty"`
+	Location string       `yaml:"location,omitempty"`
+	Options  CacheOptions `yaml:"options,omitempty"`
+}
+type CacheOptions struct {
+	LogMiss       *bool `yaml:"log-miss,omitempty"`
+	LogHit        *bool `yaml:"log-hit,omitempty"`
+	IgnoreHeaders *bool `yaml:"ignore-headers,omitempty"`
+}
+
+func (co *CacheOptions) ShouldLogMiss() bool {
+	return co.LogMiss != nil && *co.LogMiss
+}
+
+func (co *CacheOptions) ShouldLogHit() bool {
+	return co.LogHit != nil && *co.LogHit
+}
+
+func (co *CacheOptions) ShouldIgnoreHeaders() bool {
+	return co.IgnoreHeaders != nil && *co.IgnoreHeaders
 }
 
 type Config struct {
@@ -36,6 +54,15 @@ func init() {
 	}
 	if addressOverride := os.Getenv("LISTEN_ADDRESS"); addressOverride != "" {
 		Configuration.Server.Address = addressOverride
+	}
+	if ignoreHeaderOverride := os.Getenv("IGNORE_HEADERS"); ignoreHeaderOverride != "" {
+		ignoreFlag := strings.ToLower(ignoreHeaderOverride) == "true"
+		Configuration.Cache.Options.IgnoreHeaders = &ignoreFlag
+	}
+
+	if logMiss := os.Getenv("LOG_MISS"); logMiss != "" {
+		missFlag := strings.ToLower(logMiss) == "true"
+		Configuration.Cache.Options.LogMiss = &missFlag
 	}
 
 	if err != nil {

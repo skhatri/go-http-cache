@@ -17,24 +17,27 @@ type Request struct {
 	Body    []byte
 }
 
-func (req *Request) Key() string {
-	keys := make([]string, 0)
-	for k, _ := range req.Headers {
-		key := strings.ToLower(k)
-		if key == "user-agent" || strings.HasPrefix(key, "sec-") || strings.HasPrefix(key, "accept-") {
-			continue
-		}
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+func (req *Request) Key(ignoreHeaders bool) string {
 	headersSerial := bytes.Buffer{}
-	for _, key := range keys {
-		values := req.Headers[key]
-		sort.Strings(values)
-		headersSerial.WriteString(key)
-		headersSerial.WriteString("=")
-		headersSerial.WriteString(strings.Join(values, ","))
-		headersSerial.WriteString(";")
+	if !ignoreHeaders {
+		keys := make([]string, 0)
+		for k, _ := range req.Headers {
+			key := strings.ToLower(k)
+			if key == "user-agent" || strings.HasPrefix(key, "sec-") || strings.HasPrefix(key, "accept-") {
+				continue
+			}
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, key := range keys {
+			values := req.Headers[key]
+			sort.Strings(values)
+			headersSerial.WriteString(key)
+			headersSerial.WriteString("=")
+			headersSerial.WriteString(strings.Join(values, ","))
+			headersSerial.WriteString(";")
+		}
 	}
 	return NewHashing().Write(req.Method).Write(req.Url).WriteBytes(req.Body).WriteBytes(headersSerial.Bytes()).Sum()
 }

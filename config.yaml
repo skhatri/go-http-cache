@@ -6,5 +6,10 @@ target:
 
 cache:
   engine: fs
-  location: "/tmp/cache"
+  location: "./tmp/cache"
+  options:
+    log-miss: true
+    log-hit: false
+    ignore-headers: false
+
 
