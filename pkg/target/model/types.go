@@ -81,9 +81,10 @@ func (hs *Hashing) Sum() string {
 }
 
 type Response struct {
-	StatusCode int
-	Headers    map[string][]string
-	Data       io.ReadCloser
+	StatusCode     int
+	Headers        map[string][]string
+	Data           io.ReadCloser
+	RequestHeaders map[string][]string
 }
 type ResourceClient interface {
 	Invoke(request Request) (*Response, error)

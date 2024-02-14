@@ -16,9 +16,10 @@ type Cache struct {
 	Options  CacheOptions `yaml:"options,omitempty"`
 }
 type CacheOptions struct {
-	LogMiss       *bool `yaml:"log-miss,omitempty"`
-	LogHit        *bool `yaml:"log-hit,omitempty"`
-	IgnoreHeaders *bool `yaml:"ignore-headers,omitempty"`
+	LogMiss           *bool `yaml:"log-miss,omitempty"`
+	LogHit            *bool `yaml:"log-hit,omitempty"`
+	IgnoreHeaders     *bool `yaml:"ignore-headers,omitempty"`
+	LogRequestHeaders *bool `yaml:"log-request-headers,omitempty"`
 }
 
 func (co *CacheOptions) ShouldLogMiss() bool {
@@ -31,6 +32,10 @@ func (co *CacheOptions) ShouldLogHit() bool {
 
 func (co *CacheOptions) ShouldIgnoreHeaders() bool {
 	return co.IgnoreHeaders != nil && *co.IgnoreHeaders
+}
+
+func (co *CacheOptions) ShouldLogRequestHeaders() bool {
+	return co.LogRequestHeaders != nil && *co.LogRequestHeaders
 }
 
 type Config struct {
@@ -64,6 +69,11 @@ func init() {
 		missFlag := strings.ToLower(logMiss) == "true"
 		Configuration.Cache.Options.LogMiss = &missFlag
 	}
+	if logRequestHeaders := os.Getenv("LOG_REQUEST_HEADERS"); logRequestHeaders != "" {
+		requestHeadersFlag := strings.ToLower(logRequestHeaders) == "true"
+		Configuration.Cache.Options.LogRequestHeaders = &requestHeadersFlag
+	}
+
 	if err != nil {
 		panic(err)
 	}

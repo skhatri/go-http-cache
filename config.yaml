@@ -11,5 +11,6 @@ cache:
     log-miss: true
     log-hit: false
     ignore-headers: false
+    log-request-headers: false
 
 

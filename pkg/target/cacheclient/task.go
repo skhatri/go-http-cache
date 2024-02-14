@@ -16,10 +16,11 @@ import (
 var logger = logging.NewLogger("fs")
 
 type CacheData struct {
-	Url        string              `json:"url"`
-	StatusCode int                 `json:"statusCode"`
-	Data       []byte              `json:"data"`
-	Headers    map[string][]string `json:"headers"`
+	Url            string              `json:"url"`
+	StatusCode     int                 `json:"statusCode"`
+	Data           []byte              `json:"data"`
+	Headers        map[string][]string `json:"headers"`
+	RequestHeaders map[string][]string `json:"requestHeaders,omitempty"`
 }
 
 func (cd *CacheData) ToResponse() *model.Response {
@@ -55,11 +56,16 @@ func (fo *_CacheClient) Invoke(req model.Request) (*model.Response, error) {
 
 func (fo *_CacheClient) OnNotify(req model.Request, res *model.Response) {
 	data, _ := io.ReadAll(res.Data)
+	var requestHeaders map[string][]string = nil
+	if fo.options.ShouldLogRequestHeaders() {
+		requestHeaders = req.Headers
+	}
 	fo.cache.Store(req.Key(fo.options.ShouldIgnoreHeaders()), CacheData{
-		StatusCode: res.StatusCode,
-		Headers:    res.Headers,
-		Data:       data,
-		Url:        req.Url,
+		StatusCode:     res.StatusCode,
+		Headers:        res.Headers,
+		Data:           data,
+		Url:            req.Url,
+		RequestHeaders: requestHeaders,
 	})
 }
 

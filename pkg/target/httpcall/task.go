@@ -6,6 +6,7 @@ import (
 	"github.com/skhatri/go-http-cache/pkg/target/model"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -48,9 +49,13 @@ func (hc *_httpCall) Invoke(request model.Request) (*model.Response, error) {
 	return resp, nil
 }
 func httpClient() *http.Client {
+	skipVerify := false
+	if skipFlag := os.Getenv("SKIP_VERIFY_TLS"); skipFlag != "" {
+		skipVerify = strings.ToLower(skipFlag) == "true"
+	}
 	var transport *http.Transport
 	transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerify},
 	}
 	client := http.Client{
 		Transport: transport,
