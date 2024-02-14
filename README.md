@@ -13,7 +13,7 @@ Overrides
 
 ### Running Locally
 ```
-LISTEN_ADDRESS=:8070 TARGET=http://localhost:8080 go run app.go
+TARGET=https://jsonplaceholder.typicode.com SKIP_VERIFY_TLS=true go run app.go
 ```
 Doing this will listen on 8070 and proxy calls to 8080. Filesystem path /tmp/cache is used as cache location from which subsequent responses will be served. 
 
@@ -21,7 +21,11 @@ Doing this will listen on 8070 and proxy calls to 8080. Filesystem path /tmp/cac
 Same thing can be run in docker like this.
 
 ```
-docker run -e TARGET=https://jsonplaceholder.typicode.com -e LISTEN_ADDRESS=:8070 -e LOG_REQUEST_HEADERS=true -e SKIP_VERIFY_TLS=true -p 8070:8070 -it skhatri/go-http-cache:latest
+docker run -e TARGET=https://jsonplaceholder.typicode.com \
+-e LISTEN_ADDRESS=0.0.0.0:8070 \
+-e LOG_REQUEST_HEADERS=true \
+-e SKIP_VERIFY_TLS=true -p 8070:8070 \
+-it skhatri/go-http-cache:latest
 ```
 
 Test it by doing a curl

@@ -47,7 +47,7 @@ type Config struct {
 var Configuration *Config
 
 func init() {
-	configFile := "config.yaml"
+	configFile := "./conf/config.yaml"
 	if cfg := os.Getenv("CONFIG_FILE"); cfg != "" {
 		configFile = cfg
 	}

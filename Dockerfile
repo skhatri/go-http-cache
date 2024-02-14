@@ -9,8 +9,8 @@ RUN go build -o app
 FROM scratch
 
 COPY --from=builder /build/app /app
-COPY --from=builder /build/config.yaml /conf/config.yaml
-ENV CONF_FILE=/conf/config.yaml
+COPY --from=builder /build/conf/config.yaml /conf/config.yaml
+ENV CONFIG_FILE=/conf/config.yaml
 EXPOSE 8070
 CMD ["/app"]
 
