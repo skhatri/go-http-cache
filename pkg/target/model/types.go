@@ -24,7 +24,10 @@ func (req *Request) Key(ignoreHeaders bool) string {
 		keys := make([]string, 0)
 		for k, _ := range req.Headers {
 			key := strings.ToLower(k)
-			if key == "user-agent" || strings.HasPrefix(key, "sec-") || strings.HasPrefix(key, "accept-") {
+			if key == "user-agent" || 
+			strings.HasPrefix(key, "authorization") ||
+			strings.HasPrefix(key, "sec-") || 
+			strings.HasPrefix(key, "accept-") {
 				continue
 			}
 			keys = append(keys, k)
